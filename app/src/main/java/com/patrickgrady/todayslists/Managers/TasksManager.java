@@ -58,16 +58,14 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
         updateTodaysTasks();
     }
 
-    public void add(List<String> tasks) {
+    public void addList() {
+        List<String> tasks = new ArrayList<>();
         String key = UUID.randomUUID().toString();
 
         ListOfTasks t = new ListOfTasks(getDirectory(), key);
         t.setAll(tasks);
         this.put(key, t);
         order.add(key);
-
-        // update today's chosen tasks
-        // updateTodaysTasks();
     }
 
     public void remove(String key) {

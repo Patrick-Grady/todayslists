@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.action_add:
                 TasksManager tm = TasksManager.getInstance(getApplicationContext());
-                tm.add(new ArrayList<String>());
+                tm.addList();   // add a new list
                 mRecyclerView.getAdapter().notifyDataSetChanged();
 
                 startLast();

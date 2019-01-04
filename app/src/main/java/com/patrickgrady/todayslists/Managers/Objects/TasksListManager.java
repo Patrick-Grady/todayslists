@@ -1,13 +1,5 @@
 package com.patrickgrady.todayslists.Managers.Objects;
 
-import android.util.Log;
-
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -18,51 +10,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
-import static android.content.ContentValues.TAG;
-
-public class ListOfTasks extends ArrayList<String> {
+public class TasksListManager extends ArrayList<String> {
 
     private File directory;
     private String filename;
-    private ArrayList<String> elements;
-    private DatabaseReference listRef;
 
-    //#region set-up
-    public ListOfTasks(File d, String key) {
+    public TasksListManager(File d, String key) {
         directory = d;
         filename = key;
-        elements = new ArrayList<>();
-        setUpDatabaseRef();
     }
-    //#endregion
-
-    //#region firebase
-    private void setUpDatabaseRef() {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        listRef = database.getReference(filename);
-        listRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                String value = dataSnapshot.getValue(String.class);
-                Log.d(TAG, "Value is: " + value);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException());
-            }
-        });
-    }
-
-    public void writeToFirebase() {
-        // Write a message to the database
-        listRef.setValue("Hello, World!");
-    }
-    //#endregion
-
 
     public String getFilename() {
         return filename;
