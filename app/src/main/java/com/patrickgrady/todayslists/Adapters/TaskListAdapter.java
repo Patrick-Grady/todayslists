@@ -12,7 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.patrickgrady.todayslists.Managers.Objects.ListOfTasks;
+import com.patrickgrady.todayslists.Objects.ListOfTasks;
 import com.patrickgrady.todayslists.R;
 
 public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.MyViewHolder> implements SwipeAndDragHelper.ActionCompletionContract {
@@ -134,8 +134,7 @@ public class TaskListAdapter extends RecyclerView.Adapter<TaskListAdapter.MyView
 
     @Override
     public void onViewMoved(int oldPosition, int newPosition) {
-        String task = mDataset.remove(oldPosition);
-        mDataset.add(newPosition, task);
+        mDataset.move(oldPosition, newPosition);
         notifyItemMoved(oldPosition, newPosition);
     }
 

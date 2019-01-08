@@ -1,4 +1,4 @@
-package com.patrickgrady.todayslists.Managers.Objects;
+package com.patrickgrady.todayslists.Utilities;
 
 import com.loopj.android.http.*;
 

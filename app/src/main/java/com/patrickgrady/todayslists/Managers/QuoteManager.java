@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.patrickgrady.todayslists.Managers.Objects.HttpUtils;
+import com.patrickgrady.todayslists.Utilities.HttpUtils;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONArray;

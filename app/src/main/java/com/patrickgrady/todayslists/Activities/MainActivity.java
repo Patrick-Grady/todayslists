@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeData() {
-        TasksManager tm = TasksManager.getInstance(getApplicationContext());
+        TasksManager tm = TasksManager.getInstance(true, getApplicationContext());
         QuoteManager qm = QuoteManager.getInstance(getApplicationContext(), quoteView, quoteImage);
         UpdateManager.init(getApplicationContext(), tm, qm);
         groupings = tm.getTasks();
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 break;
             case R.id.action_add:
-                TasksManager tm = TasksManager.getInstance(getApplicationContext());
+                TasksManager tm = TasksManager.getInstance(true, getApplicationContext());
                 tm.addList();   // add a new list
                 mRecyclerView.getAdapter().notifyDataSetChanged();
 
@@ -122,14 +122,14 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("Elements: ");
                 for(String name : groupings) {
                     System.out.println("\tg:" + name);
-                    for(String item : TasksManager.getInstance(getApplicationContext()).get(name)) {
+                    for(String item : TasksManager.getInstance(true, getApplicationContext()).get(name).getUnderlyingElements()) {
                         System.out.println("\t\te:" + item);
                     }
                     System.out.println("\t\td:" + TasksManager.getInstance().getTask(name));
                 }
                 break;
             case R.id.action_clear:
-                TasksManager.getInstance(getApplicationContext()).clear();
+                TasksManager.getInstance(true, getApplicationContext()).clear();
                 mRecyclerView.getAdapter().notifyDataSetChanged();
                 break;
         }

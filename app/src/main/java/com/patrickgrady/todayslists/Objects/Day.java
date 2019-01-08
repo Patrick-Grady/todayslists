@@ -1,5 +1,4 @@
-package com.patrickgrady.todayslists.Managers.Objects;
-
+package com.patrickgrady.todayslists.Objects;
 import android.os.Build;
 
 import java.text.ParseException;

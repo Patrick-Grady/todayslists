@@ -11,7 +11,7 @@ import android.view.MenuItem;
 
 import com.patrickgrady.todayslists.Adapters.SwipeAndDragHelper;
 import com.patrickgrady.todayslists.Adapters.TaskListAdapter;
-import com.patrickgrady.todayslists.Managers.Objects.ListOfTasks;
+import com.patrickgrady.todayslists.Objects.ListOfTasks;
 import com.patrickgrady.todayslists.Managers.TasksManager;
 import com.patrickgrady.todayslists.R;
 
@@ -35,7 +35,7 @@ public class TasksListActivity extends AppCompatActivity {
 
         //Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_LONG).show();
         String filename = getIntent().getStringExtra("filename");
-        task_list = TasksManager.getInstance(getApplicationContext()).get(filename);
+        task_list = TasksManager.getInstance().get(filename);
         //task_list = new String[] {""};
 
         mRecyclerView = (RecyclerView) findViewById(R.id.task_recycler_view);
@@ -90,7 +90,7 @@ public class TasksListActivity extends AppCompatActivity {
             finish();
         }
         else if(id == R.id.action_sort) {
-            task_list.sortInPlace();
+            task_list.sortInPlace("value");
             mRecyclerView.getAdapter().notifyDataSetChanged();
             return true;
         }

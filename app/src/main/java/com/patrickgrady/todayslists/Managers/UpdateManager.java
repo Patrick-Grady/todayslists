@@ -3,7 +3,7 @@ package com.patrickgrady.todayslists.Managers;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.patrickgrady.todayslists.Managers.Objects.Day;
+import com.patrickgrady.todayslists.Objects.Day;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +35,9 @@ public class UpdateManager extends ArrayList<UpdateManager.TimeSensitive> {
 
     public void updateListeners() {
         if(shouldUpdateTasks()) {
+            long now = System.currentTimeMillis();
             for (TimeSensitive t : this) {
-                t.update();
+                t.update(now);
             }
         }
         else {
@@ -56,13 +57,13 @@ public class UpdateManager extends ArrayList<UpdateManager.TimeSensitive> {
         boolean shouldUpdate = today.isAfter(savedDay);
 
         if(shouldUpdate)
-            tPref.edit().putLong("time", now).commit();
+            tPref.edit().putLong("time", now).apply();
 
         return shouldUpdate;
     }
 
     public interface TimeSensitive {
-        void update();
+        void update(long updateTimeMillis);
         void refresh();
     }
 }
