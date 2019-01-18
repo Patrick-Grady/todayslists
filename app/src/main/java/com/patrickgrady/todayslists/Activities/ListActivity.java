@@ -14,27 +14,30 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.patrickgrady.todayslists.Adapters.MainAdapter;
+import com.patrickgrady.todayslists.Adapters.MyListAdapter;
 import com.patrickgrady.todayslists.Adapters.SwipeAndDragHelper;
+import com.patrickgrady.todayslists.Managers.ListManager;
 import com.patrickgrady.todayslists.Managers.QuoteManager;
 import com.patrickgrady.todayslists.Managers.TasksManager;
 import com.patrickgrady.todayslists.Managers.UpdateManager;
+import com.patrickgrady.todayslists.Objects.ListElement;
 import com.patrickgrady.todayslists.R;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class ListActivity extends AppCompatActivity {
 
     // ui
     private RecyclerView mRecyclerView;
-    private MainAdapter mAdapter;
+    private MyListAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private ImageView quoteImage;
     private TextView quoteView;
     private Toolbar toolbar;
 
     // data
-    private ArrayList<String> groupings;
     private ArrayList<String> elements;
+    private String key;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,15 +60,21 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+        if(getIntent().getExtras() != null) {
+            key = getIntent().getStringExtra("key");
+        }
+        else {
+            key = ListElement.ROOT;
+        }
         initializeData();
 
         // using an adapter
-        mAdapter = new MainAdapter(groupings);
+        mAdapter = new MyListAdapter(elements);
         mRecyclerView.setAdapter(mAdapter);
 
-        SwipeAndDragHelper swipeAndDragHelper = new SwipeAndDragHelper((MainAdapter) mAdapter);
+        SwipeAndDragHelper swipeAndDragHelper = new SwipeAndDragHelper((MyListAdapter) mAdapter);
         ItemTouchHelper touchHelper = new ItemTouchHelper(swipeAndDragHelper);
-        ((MainAdapter) mAdapter).setTouchHelper(touchHelper);
+        ((MyListAdapter) mAdapter).setTouchHelper(touchHelper);
         mRecyclerView.setAdapter(mAdapter);
         touchHelper.attachToRecyclerView(mRecyclerView);
 
@@ -75,10 +84,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeData() {
-        TasksManager tm = TasksManager.getInstance(true, getApplicationContext());
+        ListManager lm = ListManager.getInstance();
+        try {
+            lm.setFocusList(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         QuoteManager qm = QuoteManager.getInstance(getApplicationContext(), quoteView, quoteImage);
-        UpdateManager.init(getApplicationContext(), tm, qm);
-        groupings = tm.getTasks();
+        UpdateManager.init(getApplicationContext(), qm);
+        elements = lm.getElementKeys();
     }
 
     @Override
@@ -86,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         UpdateManager.getInstance().updateListeners();
-        TasksManager.getInstance().getTasks();
         mRecyclerView.getAdapter().notifyDataSetChanged();
     }
 
@@ -109,41 +122,26 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 break;
             case R.id.action_add:
-                TasksManager tm = TasksManager.getInstance(true, getApplicationContext());
-                tm.addList();   // add a new list
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-
-                startLast();
+                ListManager.getInstance().addNewString();   // add a new element
+                break;
+            case R.id.action_add_folder:
+                ListManager.getInstance().addNewFolder();   // add a new list
                 break;
             case R.id.action_trash:
                 getApplicationContext().getSharedPreferences("time", Context.MODE_PRIVATE).edit().clear().apply();
                 break;
             case R.id.action_info:
-                System.out.println("Dataset size: " + groupings.size());
+                System.out.println("Dataset size: " + elements.size());
                 System.out.println("Elements: ");
-                for(String name : groupings) {
-                    System.out.println("\tg:" + name);
-                    for(String item : TasksManager.getInstance(true, getApplicationContext()).get(name).getUnderlyingElements()) {
-                        System.out.println("\t\te:" + item);
-                    }
-                    System.out.println("\t\td:" + TasksManager.getInstance().getTask(name));
+                for(String key : elements) {
+                    System.out.println("\tg:" + key);
                 }
                 break;
             case R.id.action_clear:
-                TasksManager.getInstance(true, getApplicationContext()).clear();
-                mRecyclerView.getAdapter().notifyDataSetChanged();
+                ListManager.getInstance().removeAllChildren();
                 break;
         }
 
         return super.onOptionsItemSelected(mItem);
-    }
-
-    public void startLast() {
-        String key = groupings.get(groupings.size()-1);
-        Context context = getApplicationContext();
-        Intent intent = new Intent(context, TasksListActivity.class);
-        intent.putExtra("filename", key);
-
-        context.startActivity(intent);
     }
 }

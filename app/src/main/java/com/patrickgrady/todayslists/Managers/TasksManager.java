@@ -13,12 +13,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.patrickgrady.todayslists.Objects.DailyTasks;
 import com.patrickgrady.todayslists.Objects.ListOfTasks;
 import com.patrickgrady.todayslists.Objects.firebase.ListOfTasksFire;
+import com.patrickgrady.todayslists.Objects.local.DailyTaskLocal;
 import com.patrickgrady.todayslists.Objects.local.ListOfTasksLocal;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.TreeMap;
@@ -35,11 +35,10 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
     private boolean localMode;
 
     // local storage member variables
-    private SharedPreferences pref;
-    private File directory;
+    private File directory, listDirectory;
 
     // firebase member variables
-    private DatabaseReference dataRef;
+    private DatabaseReference childRef, dataRef;
 
     //#region constructor/set-up
     private TasksManager(boolean lm) {
@@ -73,34 +72,53 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
         order.clear();
 
         if(localMode) {
-            for (String filename : fileNames()) {
-                new File(getDirectory(), filename).delete();
+            for (File file : listsFiles()) {
+                file.delete();
             }
+        }
+        else {
+            childRef.removeValue();
         }
     }
 
     public void addList() {
         String key = UUID.randomUUID().toString();
 
-        ListOfTasks t = new ListOfTasksFire(key);
-        this.put(key, t);
+        ListOfTasks t;
+        if(localMode) {
+            t = new ListOfTasksLocal(listDirectory, key);
+            this.put(key, t);
+            refresh();
+        }
+        else {
+            t = new ListOfTasksFire(key);
+            childRef.child(key).setValue(t);
+        }
+
         order.add(key);
     }
 
     public void remove(String key) {
-        if(localMode && Arrays.asList(fileNames()).contains(key)) {
-            new File(getDirectory(), key).delete();
+        if(localMode) {
+            new File(listDirectory, key).delete();
+            super.remove(key);
         }
-        super.remove(key);
+        else {
+            childRef.child(key).removeValue();
+        }
+
         dailyTasks.remove(key);
         order.remove(key);
     }
 
     private void remove(String key, Iterator itr) {
-        if(localMode && Arrays.asList(fileNames()).contains(key)) {
-            new File(getDirectory(), key).delete();
+        if(localMode) {
+            new File(listDirectory, key).delete();
+            super.remove(key);
         }
-        super.remove(key);
+        else {
+            childRef.child(key).removeValue();
+        }
         dailyTasks.remove(key);
         itr.remove();
     }
@@ -112,7 +130,7 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
     }
 
     public String getTask(String key) {
-        return pref.getString(key, "");
+        return dailyTasks.getTask(key);
     }
 
     public void move(int oldPosition, int newPosition) {
@@ -173,30 +191,34 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
             loadLocal(c[0]);
         }
         else {
-            loadDatabase();
+            loadFirebase();
         }
     }
     //#endregion
 
     //#region firebase control
-    private void loadDatabase() {
+    private void loadFirebase() {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        dataRef = database.getReference("lists");
-        dataRef.addChildEventListener(new ChildEventListener() {
+
+        // load lists
+        childRef = database.getReference("lists");
+        childRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 ListOfTasks tasks = dataSnapshot.getValue(ListOfTasksFire.class);
                 TasksManager.this.put(dataSnapshot.getKey(), tasks);
+                refresh();
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                refresh();
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
+                TasksManager.super.remove(dataSnapshot.getKey());
+                refresh();
             }
 
             @Override
@@ -214,25 +236,27 @@ public class TasksManager extends TreeMap<String, ListOfTasks> implements Update
 
     //#region local control
     private void loadLocal(Context c) {
-        pref = c.getSharedPreferences("tasks",Context.MODE_PRIVATE);
         setDirectory(c);
-        for(String filename : fileNames()) {
-            ListOfTasksLocal tasks = new ListOfTasksLocal(getDirectory(), filename);
-            tasks.loadFromFile();
+        dailyTasks = new DailyTaskLocal(directory);
+        for(String filename : listDirectory.list()) {
+            ListOfTasksLocal tasks = new ListOfTasksLocal(listDirectory, filename);
             this.put(filename, tasks);
             order.add(filename);
         }
     }
 
-    private String[] fileNames() {
-        return getDirectory().list();
+    private File[] listsFiles() {
+        return listDirectory.listFiles();
     }
-    private File getDirectory() { return directory; }
+
     private void setDirectory(Context c) {
         directory = new File(c.getFilesDir(), "tasks");
 
         // creates the directory if not present yet
         directory.mkdir();
+
+        listDirectory = new File(directory, "lists");
+        listDirectory.mkdir();
     }
     //#endregion
 

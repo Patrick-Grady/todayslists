@@ -20,6 +20,7 @@ public class ListOfTasksLocal extends ListOfTasks {
         directory = d;
         filename = key;
         tasks = new ArrayList<>();
+        loadFromFile();
     }
 
     @Override
